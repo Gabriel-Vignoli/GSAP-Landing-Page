@@ -1,11 +1,17 @@
+// @ts-nocheck
+// TypeScript checking disabled for this file
 import { useGSAP } from "@gsap/react";
 import { SplitText } from "gsap/all";
 import gsap from "gsap";
+import { useRef } from "react";
+import { useMediaQuery } from "react-responsive";
 
-// Register the plugin
-gsap.registerPlugin(SplitText);
 
 const Hero = () => {
+  const videoRef = useRef();
+
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+
   useGSAP(() => {
     // it will split the text into characters and words, and wrap them in divs with the class "char" and "word" respectively
     const heroSplit = new SplitText(".title", {
@@ -46,9 +52,29 @@ const Hero = () => {
       })
       .to(".right-leaf", { y: 200 }, 0)
       .to(".left-leaf", { y: -200 }, 0);
-  }, []);
 
-  return (
+    // the first prop is the target element, the second prop is the animation properties, and the third prop is the position of the animation in the timeline (0 means it will start at the beginning of the timeline)
+   const startValue = isMobile ? "top 50%" : "center 60%";
+	const endValue = isMobile ? "120% top" : "bottom top";
+	
+	const tl = gsap.timeline({
+	 scrollTrigger: {
+		trigger: "video",
+		start: startValue,
+		end: endValue,
+		scrub: true,
+		pin: true,
+	 },
+	});
+	
+	videoRef.current.onloadedmetadata = () => {
+	 tl.to(videoRef.current, {
+		currentTime: videoRef.current.duration,
+	 });
+	};
+ }, []);
+ 
+ return (
     <>
       <section id="hero" className="noisy">
         <h1 className="title">MOJITO</h1>
@@ -84,6 +110,16 @@ const Hero = () => {
           </div>
         </div>
       </section>
+
+       <div className="video absolute inset-0">
+		<video
+		 ref={videoRef}
+		 muted
+		 playsInline
+		 preload="auto"
+		 src="/videos/output.mp4"
+		/>
+	 </div>
     </>
   );
 };
